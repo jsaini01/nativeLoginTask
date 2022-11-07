@@ -1,14 +1,31 @@
 import {View, TextInput, StyleSheet, Text, Alert} from 'react-native';
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Btn from '../../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({navigation}) => {
-  //   const [navigations] = useState(navigation);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const [userData, setUserData] = useState();
+  const [token, setToken] = useState();
+  useEffect(() => {
+    retrieveData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+  const retrieveData = async () => {
+    try {
+      const value = await AsyncStorage.getItem('token');
+      console.log('value', value);
+      if (value) {
+        navigation.navigate('Home');
+        setToken(value);
+      } else {
+        navigation.navigate('Login');
+      }
+    } catch (error) {
+      console.log('error', error);
+    }
+  };
 
   const Api = 'https://reqres.in/api/login';
 
@@ -31,18 +48,11 @@ const Login = ({navigation}) => {
         body: JSON.stringify(items),
       })
         .then(res => res.json())
-        .then(res => {
-          navigation.navigate('Home');
-          const StoreData = async () => {
-            try {
-              await AsyncStorage.setItem('token', JSON.stringify(res));
-            } catch (error) {
-              console.log('err', error);
-            }
-          };
-          StoreData();
+        .then(async res => {
+          console.log('res?.token', res?.token);
+          await AsyncStorage.setItem('token', res?.token);
+          setToken(res?.token);
         })
-
         .catch(err => {
           console.log('err', err);
         });
